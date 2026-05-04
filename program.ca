@@ -1,0 +1,115 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace StatisticsAssignment
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // The data set provided in the assignment
+            double[] data = { 115, 182, 191, 31, 196, 1099, 5, 172, 10, 179, 83, 21, 20, 21, 186, 177, 195, 193, 188, 199, 62, 109, 105, 183, 110 };
+            
+            Console.WriteLine("--- Part 1: Statistical Computations ---");
+            PerformStatisticalAnalysis(data);
+
+            Console.WriteLine("\n--- Part 2: Outlier Detection ---");
+            DetectOutliers(data);
+            
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
+        }
+
+        static void PerformStatisticalAnalysis(double[] data)
+        {
+            int n = data.Length;
+            double[] sortedData = (double[])data.Clone();
+            Array.Sort(sortedData);
+
+            // (i) Mean
+            double mean = data.Average();
+
+            // (ii) Mode
+            double mode = data.GroupBy(x => x).OrderByDescending(g => g.Count()).First().Key;
+
+            // (iii) Median
+            double median = GetPercentile(sortedData, 50);
+
+            // (iv) Variance
+            double variance = data.Select(x => Math.Pow(x - mean, 2)).Sum() / n;
+
+            // (v) P20
+            double p20 = GetPercentile(sortedData, 20);
+
+            // (vi) P50
+            double p50 = GetPercentile(sortedData, 50);
+
+            // (vii & ix) Third Quartile (Q3)
+            double q3 = GetPercentile(sortedData, 75);
+
+            // (viii) Second Quartile (Q2)
+            double q2 = GetPercentile(sortedData, 50);
+
+            // (x) Range
+            double range = data.Max() - data.Min();
+
+            // (xi) Interquartile Range (IQR)
+            double q1 = GetPercentile(sortedData, 25);
+            double iqr = q3 - q1;
+
+            // (xii) Standard Deviation
+            double stdDev = Math.Sqrt(variance);
+
+            // (xiii) Summation of Deviations
+            double sumDeviations = data.Sum(x => x - mean);
+
+            // Displaying results
+            Console.WriteLine($"(i) Mean: {mean:F2}");
+            Console.WriteLine($"(ii) Mode: {mode}");
+            Console.WriteLine($"(iii) Median: {median}");
+            Console.WriteLine($"(iv) Variance: {variance:F2}");
+            Console.WriteLine($"(v) P20: {p20}");
+            Console.WriteLine($"(vi) P50: {p50}");
+            Console.WriteLine($"(vii/ix) Third Quartile (Q3): {q3}");
+            Console.WriteLine($"(viii) Second Quartile (Q2): {q2}");
+            Console.WriteLine($"(x) Range: {range}");
+            Console.WriteLine($"(xi) IQR: {iqr}");
+            Console.WriteLine($"(xii) Standard Deviation: {stdDev:F2}");
+            Console.WriteLine($"(xiii) Summation of Deviations: {sumDeviations:F10}");
+        }
+
+        static void DetectOutliers(double[] data)
+        {
+            double[] sortedData = (double[])data.Clone();
+            Array.Sort(sortedData);
+
+            double q1 = GetPercentile(sortedData, 25);
+            double q3 = GetPercentile(sortedData, 75);
+            double iqr = q3 - q1;
+
+            double lowerBound = q1 - (1.5 * iqr);
+            double upperBound = q3 + (1.5 * iqr);
+
+            Console.WriteLine($"Lower Bound: {lowerBound:F2}, Upper Bound: {upperBound:F2}");
+            
+            foreach (var val in data)
+            {
+                bool isOutlier = (val < lowerBound || val > upperBound);
+                Console.WriteLine($"Value: {val, 5} -> Outlier: {(isOutlier ? "YES" : "NO")}");
+            }
+        }
+
+        static double GetPercentile(double[] sortedData, double percentile)
+        {
+            double rank = (percentile / 100) * (sortedData.Length - 1);
+            int index = (int)rank;
+            double fraction = rank - index;
+            
+            if (index + 1 < sortedData.Length)
+                return sortedData[index] + (fraction * (sortedData[index + 1] - sortedData[index]));
+            
+            return sortedData[index];
+        }
+    }
+}
